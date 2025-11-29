@@ -11,6 +11,8 @@ interface HomeProps {
   orders: Order[];
   // Admin Actions
   onUpdateMenuStatus: (itemId: string, available: boolean) => void;
+  onAddMenuItem: (item: Omit<MenuItem, 'id'>) => void;
+  onDeleteMenuItem: (itemId: string) => void;
   onUpdateOrderStatus: (orderId: string, status: OrderStatus) => void;
   // Customer Actions
   onPlaceOrder: (items: CartItem[], total: number) => void;
@@ -22,6 +24,8 @@ export const Home: React.FC<HomeProps> = ({
   menuItems, 
   orders, 
   onUpdateMenuStatus, 
+  onAddMenuItem,
+  onDeleteMenuItem,
   onUpdateOrderStatus,
   onPlaceOrder
 }) => {
@@ -33,6 +37,8 @@ export const Home: React.FC<HomeProps> = ({
         orders={orders}
         onLogout={onLogout}
         onUpdateMenuStatus={onUpdateMenuStatus}
+        onAddMenuItem={onAddMenuItem}
+        onDeleteMenuItem={onDeleteMenuItem}
         onUpdateOrderStatus={onUpdateOrderStatus}
       />
     );
@@ -42,6 +48,7 @@ export const Home: React.FC<HomeProps> = ({
     <CustomerDashboard 
       user={user}
       menuItems={menuItems}
+      orders={orders}
       onLogout={onLogout}
       onPlaceOrder={onPlaceOrder}
     />

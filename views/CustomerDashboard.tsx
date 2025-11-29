@@ -1,25 +1,33 @@
 import React, { useState } from 'react';
-import { User, MenuItem, CartItem, Order } from '../types';
+import { User, MenuItem, CartItem, Order, OrderStatus } from '../types';
 import { Button } from '../components/Button';
-import { LogOut, ShoppingBag, Info, Phone, X, CreditCard, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { LogOut, ShoppingBag, X, AlertCircle, CheckCircle2, PackageSearch, Clock } from 'lucide-react';
 
 interface CustomerDashboardProps {
   user: User;
   menuItems: MenuItem[];
+  orders: Order[]; // Received all orders, will filter by user
   onLogout: () => void;
   onPlaceOrder: (items: CartItem[], total: number) => void;
 }
 
 export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({ 
   user, 
-  menuItems, 
+  menuItems,
+  orders, 
   onLogout,
   onPlaceOrder
 }) => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isOrdersOpen, setIsOrdersOpen] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'success' | 'error'>('idle');
+
+  // Filter orders for this customer
+  const myOrders = orders.filter(o => o.customerName === user.username);
+  // Sort by date desc
+  myOrders.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
 
   const addToCart = (item: MenuItem) => {
     if (!item.available) return;
@@ -31,10 +39,6 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
       }
       return [...prev, { ...item, quantity: 1 }];
     });
-  };
-
-  const removeFromCart = (itemId: string) => {
-    setCart(prev => prev.filter(i => i.id !== itemId));
   };
 
   const updateQuantity = (itemId: string, delta: number) => {
@@ -67,11 +71,26 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
         setCart([]);
         setIsCartOpen(false);
         setPaymentStatus('idle');
+        setIsOrdersOpen(true); // Open orders tracking automatically
       }, 2000);
     } else {
       setPaymentStatus('error');
     }
     setIsProcessingPayment(false);
+  };
+
+  const getStatusBadge = (status: OrderStatus) => {
+    switch(status) {
+      case OrderStatus.PENDING: 
+      case OrderStatus.PREPARING:
+        // User requested: "Pending" until delivered. We show logic states but style them similarly if needed.
+        return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"><Clock className="w-3 h-3"/> Pending</span>;
+      case OrderStatus.READY:
+         return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30"><PackageSearch className="w-3 h-3"/> On Way</span>;
+      case OrderStatus.DELIVERED:
+        return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold bg-green-500/20 text-green-400 border border-green-500/30"><CheckCircle2 className="w-3 h-3"/> Delivered</span>;
+      default: return null;
+    }
   };
 
   return (
@@ -84,7 +103,7 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
           </h1>
           <div className="hidden md:flex items-center gap-4">
             <Button variant="outline" className="!py-1.5 !px-3 !text-sm border-transparent hover:bg-white/5">Home</Button>
-            <Button variant="outline" className="!py-1.5 !px-3 !text-sm border-transparent hover:bg-white/5">About</Button>
+            <Button onClick={() => setIsOrdersOpen(true)} variant="outline" className="!py-1.5 !px-3 !text-sm border-purple-500/30 hover:bg-purple-500/10">My Orders</Button>
             <Button variant="outline" className="!py-1.5 !px-3 !text-sm border-transparent hover:bg-white/5">Contact</Button>
           </div>
         </div>
@@ -115,9 +134,12 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
 
       {/* Main Content - Menu */}
       <div className="max-w-7xl mx-auto px-6 pb-20">
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold text-white mb-2">Our Menu</h2>
-          <p className="text-purple-200/60">Delicious cosmic delights, freshly prepared.</p>
+        <div className="mb-8 flex justify-between items-end">
+          <div>
+            <h2 className="text-3xl font-bold text-white mb-2">Our Menu</h2>
+            <p className="text-purple-200/60">Delicious cosmic delights, freshly prepared.</p>
+          </div>
+          <button onClick={() => setIsOrdersOpen(true)} className="md:hidden text-purple-300 underline">Track Orders</button>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -155,34 +177,25 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
         </div>
       </div>
 
-      {/* Cart Drawer Overlay */}
+      {/* Cart Drawer */}
       {isCartOpen && (
         <div className="fixed inset-0 z-50 flex justify-end">
-          <div 
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={() => setIsCartOpen(false)}
-          ></div>
-          
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsCartOpen(false)}></div>
           <div className="relative w-full max-w-md bg-[#1a1640] border-l border-white/10 shadow-2xl flex flex-col h-full animation-fade-in">
             <div className="p-6 border-b border-white/10 flex justify-between items-center">
               <h2 className="text-xl font-bold text-white flex items-center gap-2">
                 <ShoppingBag className="w-5 h-5 text-pink-400" />
                 Your Cart
               </h2>
-              <button 
-                onClick={() => setIsCartOpen(false)}
-                className="text-purple-300 hover:text-white transition-colors"
-              >
+              <button onClick={() => setIsCartOpen(false)} className="text-purple-300 hover:text-white transition-colors">
                 <X className="w-6 h-6" />
               </button>
             </div>
-
             <div className="flex-1 overflow-y-auto p-6 space-y-4">
               {cart.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-purple-300/40 space-y-4">
-                  <ShoppingBag className="w-16 h-16" />
+                  <ShoppingBag className="w-16 h-16 opacity-50" />
                   <p>Your cart is empty.</p>
-                  <Button variant="outline" onClick={() => setIsCartOpen(false)}>Start Ordering</Button>
                 </div>
               ) : (
                 cart.map(item => (
@@ -203,42 +216,80 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
                 ))
               )}
             </div>
-
             {cart.length > 0 && (
               <div className="p-6 bg-black/20 border-t border-white/10 space-y-4">
-                <div className="flex justify-between items-center text-purple-200">
-                  <span>Subtotal</span>
-                  <span>${cartTotal.toFixed(2)}</span>
-                </div>
                 <div className="flex justify-between items-center text-xl font-bold text-white">
                   <span>Total</span>
                   <span className="text-pink-400">${cartTotal.toFixed(2)}</span>
                 </div>
-
                 {paymentStatus === 'error' && (
                   <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded-xl text-sm flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4" />
-                    Payment Failed. Please try again.
+                    <AlertCircle className="w-4 h-4" /> Payment Failed.
                   </div>
                 )}
-                
-                {paymentStatus === 'success' && (
-                  <div className="bg-green-500/10 border border-green-500/20 text-green-400 p-3 rounded-xl text-sm flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4" />
-                    Payment Successful! Order placed.
-                  </div>
-                )}
-
-                <Button 
-                  fullWidth 
-                  onClick={handlePayment}
-                  disabled={isProcessingPayment || paymentStatus === 'success'}
-                  className={paymentStatus === 'success' ? "!bg-green-600 hover:!bg-green-700" : ""}
-                >
-                  {isProcessingPayment ? 'Processing...' : paymentStatus === 'success' ? 'Ordered!' : 'Make Payment'}
+                <Button fullWidth onClick={handlePayment} disabled={isProcessingPayment || paymentStatus === 'success'}>
+                  {isProcessingPayment ? 'Processing...' : 'Make Payment'}
                 </Button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Order Tracking Modal */}
+      {isOrdersOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setIsOrdersOpen(false)}></div>
+          <div className="relative w-full max-w-2xl bg-[#1a1640] border border-white/10 shadow-2xl rounded-2xl flex flex-col max-h-[80vh] animation-fade-in">
+            <div className="p-6 border-b border-white/10 flex justify-between items-center bg-white/5 rounded-t-2xl">
+              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <PackageSearch className="w-5 h-5 text-blue-400" />
+                My Order Tracking
+              </h2>
+              <button onClick={() => setIsOrdersOpen(false)} className="text-purple-300 hover:text-white">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto">
+              {myOrders.length === 0 ? (
+                <div className="text-center py-10 text-purple-300/50">
+                  <p>No past orders found.</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm text-purple-200">
+                    <thead className="bg-white/5 text-purple-100 uppercase font-bold text-xs">
+                      <tr>
+                        <th className="p-3 rounded-l-lg">ID</th>
+                        <th className="p-3">Items</th>
+                        <th className="p-3">Status</th>
+                        <th className="p-3 rounded-r-lg text-right">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                      {myOrders.map(order => (
+                        <tr key={order.id} className="hover:bg-white/5 transition-colors">
+                          <td className="p-3 font-mono text-pink-300">#{order.id.slice(-4)}</td>
+                          <td className="p-3">
+                            <div className="flex flex-col gap-1">
+                              {order.items.map((item, i) => (
+                                <span key={i} className="truncate">{item.quantity}x {item.name}</span>
+                              ))}
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            {getStatusBadge(order.status)}
+                          </td>
+                          <td className="p-3 text-right font-bold text-white">
+                            ${order.total.toFixed(2)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

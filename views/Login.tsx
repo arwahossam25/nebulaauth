@@ -43,11 +43,11 @@ export const Login: React.FC<LoginProps> = ({ onNavigateSignup, onLoginSuccess }
   return (
     <div className="w-full max-w-md p-8 rounded-3xl backdrop-blur-xl bg-white/10 border border-white/20 shadow-2xl animation-fade-in">
       <div className="text-center mb-8">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 mb-4 shadow-lg shadow-purple-500/30">
+        {/* <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 mb-4 shadow-lg shadow-purple-500/30">
           <LogIn className="w-8 h-8 text-white" />
-        </div>
+        </div> */}
         <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-pink-300 via-purple-300 to-blue-300">
-          Welcome Back
+          🍽️ Welcome to our Restaurant!🍽️
         </h2>
         <p className="text-purple-200/60 mt-2">Please sign in to continue</p>
       </div>

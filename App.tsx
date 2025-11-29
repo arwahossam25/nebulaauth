@@ -34,6 +34,21 @@ const App: React.FC = () => {
   const handleUpdateMenuStatus = (itemId: string, available: boolean) => {
     setMenuItems(prev => prev.map(item => item.id === itemId ? { ...item, available } : item));
   };
+//modified part
+  
+
+  const handleAddMenuItem = (item: Omit<MenuItem, 'id'>) => {
+    const newItem: MenuItem = {
+      ...item,
+      id: Math.random().toString(36).substr(2, 9)
+    };
+    setMenuItems(prev => [newItem, ...prev]);
+  };
+
+  const handleDeleteMenuItem = (itemId: string) => {
+    setMenuItems(prev => prev.filter(item => item.id !== itemId));
+  };
+//modified part end
 
   const handleUpdateOrderStatus = (orderId: string, status: OrderStatus) => {
     setOrders(prev => prev.map(order => order.id === orderId ? { ...order, status } : order));
@@ -73,6 +88,8 @@ const App: React.FC = () => {
           menuItems={menuItems}
           orders={orders}
           onUpdateMenuStatus={handleUpdateMenuStatus}
+          onAddMenuItem={handleAddMenuItem}
+          onDeleteMenuItem={handleDeleteMenuItem}
           onUpdateOrderStatus={handleUpdateOrderStatus}
           onPlaceOrder={handlePlaceOrder}
         />
