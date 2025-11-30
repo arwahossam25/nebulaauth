@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react';
 import { User, UserRole } from '../types';
 import { Button } from '../components/Button';
 import { InputField } from '../components/InputField';
-import { LogIn, User as UserIcon, Lock, ArrowRight } from 'lucide-react';
+import { LogIn, User as UserIcon, Lock, ArrowRight, AlertCircle } from 'lucide-react';
 
 interface LoginProps {
   onNavigateSignup: () => void;
@@ -13,12 +13,21 @@ export const Login: React.FC<LoginProps> = ({ onNavigateSignup, onLoginSuccess }
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
   // Refs for focus management
   const passwordRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validation: Check for empty fields
+    if (!username.trim() || !password.trim()) {
+      setError('Please enter both username and password.');
+      return;
+    }
+
+    setError('');
     setIsLoading(true);
     
     // Simulate API call
@@ -26,7 +35,7 @@ export const Login: React.FC<LoginProps> = ({ onNavigateSignup, onLoginSuccess }
       setIsLoading(false);
       // Mock login - in a real app, this would validate against a backend
       onLoginSuccess({
-        username: username || 'User',
+        username: username.trim(),
         email: 'user@example.com',
         role: UserRole.CUSTOMER
       });
@@ -53,6 +62,13 @@ export const Login: React.FC<LoginProps> = ({ onNavigateSignup, onLoginSuccess }
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        {error && (
+          <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded-xl text-sm flex items-center gap-2 animate-pulse">
+            <AlertCircle className="w-4 h-4" />
+            {error}
+          </div>
+        )}
+
         <InputField
           label="Username"
           placeholder="Enter your username"
@@ -61,6 +77,7 @@ export const Login: React.FC<LoginProps> = ({ onNavigateSignup, onLoginSuccess }
           onChange={(e) => setUsername(e.target.value)}
           onKeyDown={(e) => handleKeyDown(e, passwordRef)}
           autoFocus
+          required
         />
 
         <InputField
@@ -71,6 +88,7 @@ export const Login: React.FC<LoginProps> = ({ onNavigateSignup, onLoginSuccess }
           icon={<Lock className="w-5 h-5" />}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          required
         />
 
         <div className="pt-4">
