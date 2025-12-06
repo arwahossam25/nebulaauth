@@ -7,6 +7,8 @@ export interface User {
   username: string;
   email: string;
   role: UserRole;
+  phone?: string;
+  address?: string;
 }
 
 export enum ViewState {
@@ -14,6 +16,8 @@ export enum ViewState {
   SIGNUP = 'SIGNUP',
   HOME = 'HOME'
 }
+
+export type CustomerView = 'home' | 'orders' | 'contact';
 
 export interface MenuItem {
   id: string;

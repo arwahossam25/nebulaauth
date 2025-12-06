@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react';
 import { User, UserRole } from '../types';
 import { Button } from '../components/Button';
 import { InputField } from '../components/InputField';
-import { UserPlus, User as UserIcon, Mail, Lock, Shield, Smile } from 'lucide-react';
+import { UserPlus, User as UserIcon, Mail, Lock, Shield, Smile, Phone, MapPin } from 'lucide-react';
 
 interface SignupProps {
   onNavigateLogin: () => void;
@@ -14,6 +14,8 @@ export const Signup: React.FC<SignupProps> = ({ onNavigateLogin, onSignupSuccess
     username: '',
     email: '',
     password: '',
+    phone: '',
+    address: '',
     role: UserRole.CUSTOMER
   });
   
@@ -26,6 +28,8 @@ export const Signup: React.FC<SignupProps> = ({ onNavigateLogin, onSignupSuccess
   // Refs for navigation
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
+  const phoneRef = useRef<HTMLInputElement>(null);
+  const addressRef = useRef<HTMLInputElement>(null);
 
   const validateEmail = (email: string) => {
     if (!email.includes('@')) {
@@ -74,7 +78,9 @@ export const Signup: React.FC<SignupProps> = ({ onNavigateLogin, onSignupSuccess
       onSignupSuccess({
         username: formData.username,
         email: formData.email,
-        role: formData.role
+        role: formData.role,
+        phone: formData.role === UserRole.CUSTOMER ? formData.phone : undefined,
+        address: formData.role === UserRole.CUSTOMER ? formData.address : undefined,
       });
     }, 1500);
   };
@@ -160,8 +166,37 @@ export const Signup: React.FC<SignupProps> = ({ onNavigateLogin, onSignupSuccess
           icon={<Lock className="w-5 h-5" />}
           value={formData.password}
           onChange={(e) => handleChange('password', e.target.value)}
+          onKeyDown={(e) => handleKeyDown(e, formData.role === UserRole.CUSTOMER ? phoneRef : null)}
           required
         />
+
+        {/* Customer Specific Fields */}
+        {formData.role === UserRole.CUSTOMER && (
+          <div className="space-y-5 animate-fade-in">
+            <InputField
+              ref={phoneRef}
+              label="Phone Number"
+              type="tel"
+              placeholder="+1 (555) 000-0000"
+              icon={<Phone className="w-5 h-5" />}
+              value={formData.phone}
+              onChange={(e) => handleChange('phone', e.target.value)}
+              onKeyDown={(e) => handleKeyDown(e, addressRef)}
+              required
+            />
+
+            <InputField
+              ref={addressRef}
+              label="Delivery Address"
+              type="text"
+              placeholder="123 Cosmic Way, Galaxy City"
+              icon={<MapPin className="w-5 h-5" />}
+              value={formData.address}
+              onChange={(e) => handleChange('address', e.target.value)}
+              required
+            />
+          </div>
+        )}
 
         <div className="pt-2">
           <Button type="submit" fullWidth disabled={isLoading}>

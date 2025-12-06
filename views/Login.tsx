@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react';
 import { User, UserRole } from '../types';
 import { Button } from '../components/Button';
 import { InputField } from '../components/InputField';
-import { LogIn, User as UserIcon, Lock, ArrowRight, AlertCircle } from 'lucide-react';
+import { LogIn, User as UserIcon, Lock, ArrowRight, AlertCircle, Shield, Smile } from 'lucide-react';
 
 interface LoginProps {
   onNavigateSignup: () => void;
@@ -12,6 +12,7 @@ interface LoginProps {
 export const Login: React.FC<LoginProps> = ({ onNavigateSignup, onLoginSuccess }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [role, setRole] = useState<UserRole>(UserRole.CUSTOMER);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -37,7 +38,7 @@ export const Login: React.FC<LoginProps> = ({ onNavigateSignup, onLoginSuccess }
       onLoginSuccess({
         username: username.trim(),
         email: 'user@example.com',
-        role: UserRole.CUSTOMER
+        role: role
       });
     }, 1500);
   };
@@ -50,13 +51,10 @@ export const Login: React.FC<LoginProps> = ({ onNavigateSignup, onLoginSuccess }
   };
 
   return (
-    <div className="w-full max-w-md p-8 rounded-3xl backdrop-blur-xl bg-white/10 border border-white/20 shadow-2xl animation-fade-in">
+    <div className="w-full max-w-md p-8 rounded-3xl backdrop-blur-xl bg-white/10 border border-white/20 shadow-2xl animation-fade-in my-8">
       <div className="text-center mb-8">
-        {/* <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 mb-4 shadow-lg shadow-purple-500/30">
-          <LogIn className="w-8 h-8 text-white" />
-        </div> */}
         <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-pink-300 via-purple-300 to-blue-300">
-          🍽️ Welcome to our Restaurant!🍽️
+          🍽️ Welcome to our Restaurant! 🍽️
         </h2>
         <p className="text-purple-200/60 mt-2">Please sign in to continue</p>
       </div>
@@ -69,6 +67,40 @@ export const Login: React.FC<LoginProps> = ({ onNavigateSignup, onLoginSuccess }
           </div>
         )}
 
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-purple-200 mb-2 ml-1">
+            Sign in as
+          </label>
+          <div className="grid grid-cols-2 gap-3">
+             <button
+              type="button"
+              onClick={() => setRole(UserRole.CUSTOMER)}
+              className={`
+                flex items-center justify-center gap-2 p-3 rounded-xl border transition-all duration-300
+                ${role === UserRole.CUSTOMER 
+                  ? 'border-pink-500 bg-pink-500/20 text-white shadow-md shadow-pink-500/10' 
+                  : 'border-white/10 bg-white/5 text-purple-300 hover:bg-white/10'}
+              `}
+            >
+              <Smile className="w-4 h-4" />
+              <span className="font-semibold text-sm">Customer</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setRole(UserRole.ADMIN)}
+              className={`
+                flex items-center justify-center gap-2 p-3 rounded-xl border transition-all duration-300
+                ${role === UserRole.ADMIN 
+                  ? 'border-blue-500 bg-blue-500/20 text-white shadow-md shadow-blue-500/10' 
+                  : 'border-white/10 bg-white/5 text-purple-300 hover:bg-white/10'}
+              `}
+            >
+              <Shield className="w-4 h-4" />
+              <span className="font-semibold text-sm">Admin</span>
+            </button>
+          </div>
+        </div>
+
         <InputField
           label="Username"
           placeholder="Enter your username"
@@ -76,7 +108,6 @@ export const Login: React.FC<LoginProps> = ({ onNavigateSignup, onLoginSuccess }
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           onKeyDown={(e) => handleKeyDown(e, passwordRef)}
-          autoFocus
           required
         />
 
@@ -93,7 +124,7 @@ export const Login: React.FC<LoginProps> = ({ onNavigateSignup, onLoginSuccess }
 
         <div className="pt-4">
           <Button type="submit" fullWidth disabled={isLoading}>
-            {isLoading ? 'Signing In...' : 'Sign In'}
+            {isLoading ? 'Signing In...' : `Sign In as ${role === UserRole.CUSTOMER ? 'Customer' : 'Admin'}`}
             {!isLoading && <ArrowRight className="w-4 h-4" />}
           </Button>
         </div>
